@@ -202,7 +202,12 @@ static class DefaultHandler implements HttpHandler {
         }
         for (var ser : getAvailableDeviceSeries()) {
             if (ser.equals(device)) {
-                return getVersionForCohort(serial_number, Path.of(UPDATES_PATH + "/" + ser + "/conf.txt"));
+                var version = getVersionForCohort(serial_number, Path.of(UPDATES_PATH + "/" + ser + "/conf.txt"));
+                if(Files.exists(Path.of(UPDATES_PATH + "/" + version))){
+                    return version;
+                }
+                else
+                    return "Update file error. Contact administrator";
             }
         }
         return "Unknown device";
