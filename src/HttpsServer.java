@@ -10,20 +10,22 @@ import com.sun.net.httpserver.HttpsParameters;
  * Global variables
  * ----------------------------------------------------------------
  */
-private static final int PORT = 8443;
-private static final String KEYSTORE = "kosciuszkon.jks";
-private static final String KS_PASS = "HASSLO123";
-private static final String KEY_PASS = "HASSLO123";
-private static final Path UPDATES_PATH = Path.of("./updates");
+private static int PORT;
+private static String KEYSTORE;
+private static String KS_PASS;
+private static String KEY_PASS;
+private static Path UPDATES_PATH;
 
-private static final int MAX_QUERY_LENGTH = 64;
-private static final int MAX_PARAM_COUNT = 2;
-private static final int MAX_KEY_LENGTH = 10;
-private static final int MAX_VALUE_LENGTH = 512;
+private static int MAX_QUERY_LENGTH;
+private static int MAX_PARAM_COUNT;
+private static int MAX_KEY_LENGTH;
+private static int MAX_VALUE_LENGTH;
 private static final Pattern SAFE_KEY =
         Pattern.compile("[A-Za-z0-9_\\-]{1,64}");
 
 void main() throws Exception {
+
+    loadConfig(Path.of("./server_config.txt"));
 
     // 1. Załaduj keystore z certyfikatem serwera
     KeyStore ks = KeyStore.getInstance("JKS");
@@ -67,6 +69,32 @@ void main() throws Exception {
 }
 
 
+
+private void loadConfig(Path path) throws Exception {
+    if(!Files.exists(path) || !Files.isRegularFile(path)) {
+        throw new Exception("Config File Not Found!");
+    }
+    int config_members = 9;
+    var lines =  Files.readAllLines(path);
+    try {
+        if(lines.size() < config_members) {
+            throw new Exception("Config File Error!");
+        }
+        PORT = Integer.parseInt(lines.getFirst());
+        KEYSTORE = lines.get(1);
+        KS_PASS = lines.get(2);
+        KEY_PASS= lines.get(3);
+        UPDATES_PATH = Path.of(lines.get(4));
+        MAX_QUERY_LENGTH = Integer.parseInt(lines.get(5));
+        MAX_PARAM_COUNT = Integer.parseInt(lines.get(6));
+        MAX_KEY_LENGTH = Integer.parseInt(lines.get(7));
+        MAX_VALUE_LENGTH = Integer.parseInt(lines.get(8));
+    }
+    catch (Exception e) {
+        e.printStackTrace();
+        throw e;
+    }
+}
 
 
 static Map<String, String> parseQuery(String query) throws IllegalArgumentException {

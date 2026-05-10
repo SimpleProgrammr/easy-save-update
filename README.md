@@ -9,8 +9,8 @@
 1. [Basic info](#1-basic-info)
 2. [Architecture](#2-architecture)
 3. [Requirements](#3-requirements)
-4. [SSL/TLS Configuration](#4-konfiguracja-ssltls)
-5. [Installation and execution](#5-instalacja-i-uruchomienie)
+4. [SSL/TLS Configuration](#4-ssltls-configuration)
+5. [Installation and execution](#5-installation-and-execution)
 6. [API Endpoints](#6-api-endpoint)
 7. [FAQ](#7-known-problems-and-faq)
 8. [Authors](#8-authors)
@@ -82,22 +82,35 @@ updates/
 
 ### Environmental variables (Should be changed)
 
-| Zmienna            | Opis                 | Wartość domyślna  |
+| Variable           | Description          | Wartość domyślna  |
 |--------------------|----------------------|-------------------|
 | `PORT`             | Lintening port       | `8443`            |
 | `KEYSTORE`         | Key name             | `kosciuszkon.jks` |
-| `KS_PASS`          | Keystora password    | HASSLO123         |
-| `KEY_PASS`         | Private key password | HASSLO123         |
-| `MAX_QUERY_LENGTH` |                      | `TLSv1.3`         |
-| `MAX_PARAM_COUNT`  |                      | `TLSv1.3`         |
-| `MAX_KEY_LENGTH`   |                      | `TLSv1.3`         |
-| `MAX_VALUE_LENGTH` |                      | `TLSv1.3`         |
+| `KS_PASS`          | Keystora password    | `HASSLO123`       |
+| `KEY_PASS`         | Private key password | `HASSLO123`       |
+| `UPDATE_PATH`      | Path to updates      | `./updates`       |
+| `MAX_QUERY_LENGTH` |                      | `64`              |
+| `MAX_PARAM_COUNT`  |                      | `2`               |
+| `MAX_KEY_LENGTH`   |                      | `10`              |
+| `MAX_VALUE_LENGTH` |                      | `32`              |
 
+### Configuration file - "serve_config.txt"
+| Line | Variable           |
+|------|--------------------|
+| 1    | `PORT`             |
+| 2    | `KEYSTORE`         |
+| 3    | `KS_PASS`          |
+| 4    | `KEY_PASS`         |
+| 5    | `UPDATE_PATH`      |
+| 6    | `MAX_QUERY_LENGTH` |
+| 7    | `MAX_PARAM_COUNT`  |
+| 8    | `MAX_KEY_LENGTH`   |
+| 9    | `MAX_VALUE_LENGTH` |
 ---
 
-## 4. Konfiguracja SSL/TLS
+## 4. SSL/TLS configuration
 
-### Generowanie certyfikatu (self-signed, dla developmentu)
+### Certificate generation (self-signed, for development)
 
 ```bash
 # Change '-storepass', `-keypass` and `-dname`
@@ -114,9 +127,9 @@ keytool -genkeypair \
 ```
 ---
 
-## 5. Instalacja i uruchomienie
+## 5. Installation and execution
 
-### Klonowanie repozytorium
+### Cloning sorce code
 
 ```bash
 git clone https://github.com/SimpleProgrammr/easy-save-update.git
@@ -209,7 +222,7 @@ java -jar target/server.jar
 
 ### Overview
 
-| Metoda | Ścieżka                              | Opis                                |
+| Method | Path                                 | Description                         |
 |--------|--------------------------------------|-------------------------------------|
 | GET    | `/get_newest?serial=<serial_number>` | Getting newest version for your app |
 | GET    | `/files/<filename>`                  | Getting update file                 |
@@ -226,7 +239,7 @@ java -jar target/server.jar
 ```
 Downloads a update file
 ```
-**Kody błędów:**
+**Error codes:**
 
 | Code | Decription         |
 |------|--------------------|
@@ -235,20 +248,14 @@ Downloads a update file
 
 ---
 
-### Log format
-TODO:
-```
-[TIMESTAMP] [LEVEL] [EXCEPTION] [CLASS] — log content
-```
-
 ## 7. Known problems and FAQ
 
 ### Problems
 
-| Problem                                  | Przyczyna             | Rozwiązanie                       |
-|------------------------------------------|-----------------------|-----------------------------------|
-| `SSLHandshakeException`                  | Untrusted certificate | Add certifate CA to truststore    |
-| `BindException: Address already in use`  | Port 8443 in use      | Change port or stop other process |
+| Issue                                   | Cause                 | Solution                          |
+|-----------------------------------------|-----------------------|-----------------------------------|
+| `SSLHandshakeException`                 | Untrusted certificate | Add certifate CA to truststore    |
+| `BindException: Address already in use` | Port 8443 in use      | Change port or stop other process |
 
 
 ### FAQ

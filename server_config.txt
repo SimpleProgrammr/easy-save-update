@@ -1,0 +1,9 @@
+8443
+kosciuszkon.jks
+HASSLO123
+HASSLO123
+./updates
+64
+2
+10
+32
