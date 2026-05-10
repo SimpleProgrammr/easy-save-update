@@ -3,6 +3,9 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
 
+import java.awt.*;
+import java.util.List;
+
 
 /**
  * ---------- Configuration ----------
@@ -22,6 +25,32 @@ private static int MAX_KEY_LENGTH;
 private static int MAX_VALUE_LENGTH;
 private static final Pattern SAFE_KEY =
         Pattern.compile("[A-Za-z0-9_\\-]{1,64}");
+
+private void loadConfig(Path path) throws Exception {
+    if(!Files.exists(path) || !Files.isRegularFile(path)) {
+        throw new Exception("Config File Not Found!");
+    }
+    int config_members = 9;
+    var lines =  Files.readAllLines(path);
+    try {
+        if(lines.size() < config_members) {
+            throw new Exception("Config File Error!");
+        }
+        PORT = Integer.parseInt(lines.getFirst());
+        KEYSTORE = lines.get(1);
+        KS_PASS = lines.get(2);
+        KEY_PASS= lines.get(3);
+        UPDATES_PATH = Path.of(lines.get(4));
+        MAX_QUERY_LENGTH = Integer.parseInt(lines.get(5));
+        MAX_PARAM_COUNT = Integer.parseInt(lines.get(6));
+        MAX_KEY_LENGTH = Integer.parseInt(lines.get(7));
+        MAX_VALUE_LENGTH = Integer.parseInt(lines.get(8));
+    }
+    catch (Exception e) {
+        e.printStackTrace();
+        throw e;
+    }
+}
 
 void main() throws Exception {
 
@@ -62,40 +91,11 @@ void main() throws Exception {
     server.createContext("/get_newest", new DefaultHandler());
     server.createContext("/files/", new FileHandler());
 
-    server.setExecutor(Executors.newFixedThreadPool(4));
+    server.setExecutor(Executors.newFixedThreadPool(10));
     server.start();
 
     System.out.println("Serwer HTTPS uruchomiony na https://localhost:" + PORT);
 }
-
-
-
-private void loadConfig(Path path) throws Exception {
-    if(!Files.exists(path) || !Files.isRegularFile(path)) {
-        throw new Exception("Config File Not Found!");
-    }
-    int config_members = 9;
-    var lines =  Files.readAllLines(path);
-    try {
-        if(lines.size() < config_members) {
-            throw new Exception("Config File Error!");
-        }
-        PORT = Integer.parseInt(lines.getFirst());
-        KEYSTORE = lines.get(1);
-        KS_PASS = lines.get(2);
-        KEY_PASS= lines.get(3);
-        UPDATES_PATH = Path.of(lines.get(4));
-        MAX_QUERY_LENGTH = Integer.parseInt(lines.get(5));
-        MAX_PARAM_COUNT = Integer.parseInt(lines.get(6));
-        MAX_KEY_LENGTH = Integer.parseInt(lines.get(7));
-        MAX_VALUE_LENGTH = Integer.parseInt(lines.get(8));
-    }
-    catch (Exception e) {
-        e.printStackTrace();
-        throw e;
-    }
-}
-
 
 static Map<String, String> parseQuery(String query) throws IllegalArgumentException {
     Map<String, String> params = new LinkedHashMap<>();
@@ -143,7 +143,6 @@ static Map<String, String> parseQuery(String query) throws IllegalArgumentExcept
     }
     return params;
 }
-
 private static String decode(String s) {
     try {
         return URLDecoder.decode(s, StandardCharsets.UTF_8);
@@ -153,11 +152,14 @@ private static String decode(String s) {
     }
 }
 
-/** Wysyła odpowiedź */
 static void sendText(HttpExchange ex, int code, String body) throws IOException {
     byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
     ex.getResponseHeaders().set("Content-Type", "text/plain; charset=UTF-8");
     ex.sendResponseHeaders(code, bytes.length);
+
+
+    var alert_lvl = code/100-1;
+    Log(alert_lvl, "Sending Response: " + body);
     try (OutputStream os = ex.getResponseBody()) {
         os.write(bytes);
     }
@@ -202,6 +204,8 @@ public static class FileHandler implements HttpHandler {
         ex.getResponseHeaders().set("Content-Type", mimeType);
         ex.sendResponseHeaders(code, bytes.length);
 
+        var alert_lvl = code/100-1;
+        Log(alert_lvl, "Sending File: " + path.getFileName());
         try (OutputStream os = ex.getResponseBody()) {
             os.write(bytes);
         }
@@ -214,8 +218,11 @@ static class DefaultHandler implements HttpHandler {
 
         var p = parseQuery(ex.getRequestURI().getRawQuery());
 
-        if (p.containsKey("serial"))
-            sendText(ex, 200, getLatestVersion(p.get("serial")));
+        if (p.containsKey("serial")) {
+            var fileName = getLatestVersion(p.get("serial"));
+            var version = fileName.substring(0, fileName.indexOf(".xdu"));
+            sendText(ex, 200,  "%s %s".formatted(version, fileName));
+        }
         else
             sendText(ex, 404, "Not provided serial number");
 
@@ -269,4 +276,29 @@ static class DefaultHandler implements HttpHandler {
         }
 
     }
+}
+
+
+public static final String ANSI_RESET = "\u001B[0m";
+public static final String ANSI_RED = "\u001B[31m";
+public static final String ANSI_GREEN = "\u001B[32m";
+public static final String ANSI_YELLOW = "\u001B[33m";
+static void Log(int alert_lvl, String message) throws IOException {
+    String base = "[%s] [%s] %s".formatted(
+            timeParser(System.currentTimeMillis()),
+            alert_lvl,
+            message);
+    var alert_color = new String[]{ANSI_GREEN, ANSI_YELLOW, ANSI_RED};
+    alert_lvl = Math.min(alert_lvl, alert_color.length-1);
+    System.out.println(alert_color[alert_lvl] + base + ANSI_RESET);
+}
+
+static String timeParser(long millis){
+    var instant = Instant.ofEpochMilli(millis);
+
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            .withZone(ZoneId.systemDefault());
+
+    return(formatter.format(instant));
+
 }

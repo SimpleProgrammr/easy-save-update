@@ -4,6 +4,6 @@ HASSLO123
 HASSLO123
 ./updates
 64
-2
-10
-32
+4
+20
+64
