@@ -209,10 +209,10 @@ java -jar target/server.jar
 
 ### Overview
 
-| Metoda | Ścieżka                    | Opis                                |
-|--------|----------------------------|-------------------------------------|
-| GET    | `/?serial=<serial_number>` | Getting newest version for your app |
-| GET    | `/file/<filename>`         | Getting update file                 |
+| Metoda | Ścieżka                              | Opis                                |
+|--------|--------------------------------------|-------------------------------------|
+| GET    | `/get_newest?serial=<serial_number>` | Getting newest version for your app |
+| GET    | `/files/<filename>`                  | Getting update file                 |
 
 ### Detailed endpoint description
 

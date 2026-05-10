@@ -57,8 +57,8 @@ void main() throws Exception {
     });
 
     // 6. Rejestracja endpointów
-    server.createContext("/", new DefaultHandler());
-    server.createContext("/file/", new FileHandler());
+    server.createContext("/get_newest", new DefaultHandler());
+    server.createContext("/files/", new FileHandler());
 
     server.setExecutor(Executors.newFixedThreadPool(4));
     server.start();
@@ -149,7 +149,7 @@ public static class FileHandler implements HttpHandler {
 
 
         String rawPath = ex.getRequestURI().getPath();
-        String filename = rawPath.substring("/file/".length()).split("/")[0];
+        String filename = rawPath.substring("/files/".length()).split("/")[0];
 
         if (filename.isBlank()) {
             sendText(ex, 400, "Brak nazwy pliku.");
@@ -203,7 +203,7 @@ static class DefaultHandler implements HttpHandler {
         for (var ser : getAvailableDeviceSeries()) {
             if (ser.equals(device)) {
                 var version = getVersionForCohort(serial_number, Path.of(UPDATES_PATH + "/" + ser + "/conf.txt"));
-                if(Files.exists(Path.of(UPDATES_PATH + "/" + version))){
+                if(Files.exists(Path.of(UPDATES_PATH + "/%s/".formatted(device) + version))){
                     return version;
                 }
                 else
